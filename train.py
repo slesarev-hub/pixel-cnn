@@ -18,7 +18,6 @@ import tensorflow as tf
 from pixel_cnn_pp import nn
 from pixel_cnn_pp.model import model_spec
 from utils import plotting
-
 # -----------------------------------------------------------------------------
 parser = argparse.ArgumentParser()
 # data I/O
@@ -41,7 +40,7 @@ parser.add_argument('-b', '--batch_size', type=int, default=16, help='Batch size
 parser.add_argument('-u', '--init_batch_size', type=int, default=16, help='How much data to use for data-dependent initialization.')
 parser.add_argument('-p', '--dropout_p', type=float, default=0.5, help='Dropout strength (i.e. 1 - keep_prob). 0 = No dropout, higher = more dropout.')
 parser.add_argument('-x', '--max_epochs', type=int, default=5000, help='How many epochs to run in total?')
-parser.add_argument('-g', '--nr_gpu', type=int, default=8, help='How many GPUs to distribute the training across?')
+parser.add_argument('-g', '--nr_gpu', type=int, default=1, help='How many GPUs to distribute the training across?')
 # evaluation
 parser.add_argument('--polyak_decay', type=float, default=0.9995, help='Exponential decay rate of the sum of previous model iterates during Polyak averaging')
 parser.add_argument('-ns', '--num_samples', type=int, default=1, help='How many batches of samples to output.')
@@ -53,7 +52,7 @@ print('input args:\n', json.dumps(vars(args), indent=4, separators=(',',':'))) #
 # -----------------------------------------------------------------------------
 # fix random seed for reproducibility
 rng = np.random.RandomState(args.seed)
-tf.set_random_seed(args.seed)
+tf.compat.v1.set_random_seed(args.seed)
 
 # energy distance or maximum likelihood?
 if args.energy_distance:
@@ -70,6 +69,9 @@ if args.data_set == 'cifar':
 elif args.data_set == 'imagenet':
     import data.imagenet_data as imagenet_data
     DataLoader = imagenet_data.DataLoader
+elif args.data_set == 'ahe':
+    import data.ahe_data as ahe_data
+    DataLoader = ahe_data.DataLoader
 else:
     raise("unsupported dataset")
 train_data = DataLoader(args.data_dir, 'train', args.batch_size * args.nr_gpu, rng=rng, shuffle=True, return_labels=args.class_conditional)
@@ -78,17 +80,17 @@ obs_shape = train_data.get_observation_size() # e.g. a tuple (32,32,3)
 assert len(obs_shape) == 3, 'assumed right now'
 
 # data place holders
-x_init = tf.placeholder(tf.float32, shape=(args.init_batch_size,) + obs_shape)
-xs = [tf.placeholder(tf.float32, shape=(args.batch_size, ) + obs_shape) for i in range(args.nr_gpu)]
+x_init = tf.compat.v1.placeholder(tf.float32, shape=(args.init_batch_size,) + obs_shape)
+xs = [tf.compat.v1.placeholder(tf.float32, shape=(args.batch_size, ) + obs_shape) for i in range(args.nr_gpu)]
 
 # if the model is class-conditional we'll set up label placeholders + one-hot encodings 'h' to condition on
 if args.class_conditional:
     num_labels = train_data.get_num_labels()
-    y_init = tf.placeholder(tf.int32, shape=(args.init_batch_size,))
+    y_init = tf.compat.v1.placeholder(tf.int32, shape=(args.init_batch_size,))
     h_init = tf.one_hot(y_init, num_labels)
     y_sample = np.split(np.mod(np.arange(args.batch_size*args.nr_gpu), num_labels), args.nr_gpu)
     h_sample = [tf.one_hot(tf.Variable(y_sample[i], trainable=False), num_labels) for i in range(args.nr_gpu)]
-    ys = [tf.placeholder(tf.int32, shape=(args.batch_size,)) for i in range(args.nr_gpu)]
+    ys = [tf.compat.v1.placeholder(tf.int32, shape=(args.batch_size,)) for i in range(args.nr_gpu)]
     hs = [tf.one_hot(ys[i], num_labels) for i in range(args.nr_gpu)]
 else:
     h_init = None
@@ -97,13 +99,13 @@ else:
 
 # create the model
 model_opt = { 'nr_resnet': args.nr_resnet, 'nr_filters': args.nr_filters, 'nr_logistic_mix': args.nr_logistic_mix, 'resnet_nonlinearity': args.resnet_nonlinearity, 'energy_distance': args.energy_distance }
-model = tf.make_template('model', model_spec)
+model = tf.compat.v1.make_template('model', model_spec)
 
 # run once for data dependent initialization of parameters
 init_pass = model(x_init, h_init, init=True, dropout_p=args.dropout_p, **model_opt)
 
 # keep track of moving average
-all_params = tf.trainable_variables()
+all_params = tf.compat.v1.trainable_variables()
 ema = tf.train.ExponentialMovingAverage(decay=args.polyak_decay)
 maintain_averages_op = tf.group(ema.apply(all_params))
 ema_params = [ema.average(p) for p in all_params]
@@ -120,7 +122,7 @@ for i in range(args.nr_gpu):
         loss_gen.append(loss_fun(tf.stop_gradient(xs[i]), out))
 
         # gradients
-        grads.append(tf.gradients(loss_gen[i], all_params, colocate_gradients_with_ops=True))
+        grads.append(tf.gradients(ys=loss_gen[i], xs=all_params))
 
         # test
         out = model(xs[i], hs[i], ema=ema, dropout_p=0., **model_opt)
@@ -134,7 +136,7 @@ for i in range(args.nr_gpu):
             new_x_gen.append(nn.sample_from_discretized_mix_logistic(out, args.nr_logistic_mix))
 
 # add losses and gradients together and get training updates
-tf_lr = tf.placeholder(tf.float32, shape=[])
+tf_lr = tf.compat.v1.placeholder(tf.float32, shape=[])
 with tf.device('/gpu:0'):
     for i in range(1,args.nr_gpu):
         loss_gen[0] += loss_gen[i]
@@ -159,8 +161,8 @@ def sample_from_model(sess):
     return np.concatenate(x_gen, axis=0)
 
 # init & save
-initializer = tf.global_variables_initializer()
-saver = tf.train.Saver()
+initializer = tf.compat.v1.global_variables_initializer()
+saver = tf.compat.v1.train.Saver()
 
 # turn numpy inputs into feed_dict for use with tensorflow
 def make_feed_dict(data, init=False):
@@ -187,7 +189,7 @@ if not os.path.exists(args.save_dir):
     os.makedirs(args.save_dir)
 test_bpd = []
 lr = args.learning_rate
-with tf.Session() as sess:
+with tf.compat.v1.Session() as sess:
     for epoch in range(args.max_epochs):
         begin = time.time()
 
@@ -198,6 +200,15 @@ with tf.Session() as sess:
                 ckpt_file = args.save_dir + '/params_' + args.data_set + '.ckpt'
                 print('restoring parameters from', ckpt_file)
                 saver.restore(sess, ckpt_file)
+                # generate sample
+                #for i in range(10):
+                sample = sample_from_model(sess)
+                img_tile = plotting.img_tile(sample, aspect_ratio=1.0, border_color=1.0, stretch=True)
+                img = plotting.plot_img(img_tile, title=args.data_set + ' samples')
+                plotting.plt.savefig(os.path.join(args.save_dir,'%s_sample%d_%d.png' % (args.data_set, epoch,i)))
+                plotting.plt.close('all')
+                np.savez(os.path.join(args.save_dir,'%s_sample%d.npz' % (args.data_set, epoch)), sample)
+                #sys.exit() 
             else:
                 print('initializing the model...')
                 sess.run(initializer)
