@@ -13,7 +13,7 @@ def drive_auth():
     drive = GoogleDrive(gauth)
     return drive
 
-def create_folder(dirve, folder_name, parent_folder_id):  
+def create_folder(drive, folder_name, parent_folder_id):  
     folder_metadata = {
         'title': folder_name,
         'mimeType': 'application/vnd.google-apps.folder',
@@ -24,8 +24,7 @@ def create_folder(dirve, folder_name, parent_folder_id):
     return folder['id']
 
 def save_to_drive(drive, ckpt_folder_id, colab_file_path):
-    ckpt_fid = create_folder(drive, )
-    uploaded  = drive.CreateFile({"parents": [{"kind": "drive#fileLink", "id": }]})
+    uploaded  = drive.CreateFile({"parents": [{"kind": "drive#fileLink", "id":ckpt_folder_id}]})
     uploaded.SetContentFile(colab_file_path)
     uploaded.Upload()
     print('Uploaded file with ID {}'.format(uploaded.get('id')))
