@@ -204,7 +204,8 @@ with tf.compat.v1.Session() as sess:
             train_data.reset()  # rewind the iterator back to 0 to do one full epoch
             if args.load_params:
                 import drive_loader.py
-                load_from_drive(pixel_cnn_folder_colab, int(args.load_params), pixel_cnn_folder_drive_id)
+                drive = drive_auth()
+                load_from_drive(drive, pixel_cnn_folder_colab, int(args.load_params), pixel_cnn_folder_drive_id)
                 ckpt_file = args.save_dir + '/params_' + args.data_set + '.ckpt'
                 sess = tf.Session()
                 saver = tf.train.import_meta_graph(ckpt_file + '.meta')
