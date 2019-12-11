@@ -259,15 +259,18 @@ with tf.compat.v1.Session() as sess:
             img_tile = plotting.img_tile(sample_x[:100], aspect_ratio=1.0, border_color=1.0, stretch=True)
             img = plotting.plot_img(img_tile, title=args.data_set + ' samples')
             epoch_folder_name = "ckpt"+str(epoch)
-            plotting.plt.savefig(os.path.join(args.save_dir+"/"+epoch_folder_name,'%s_sample%d.png' % (args.data_set, epoch)))
+            colab_epoch_folder = args.save_dir+"/"+epoch_folder_name
+            if not os.path.exists(colab_epoch_folder):
+                os.mkdir(colab_epoch_folder)
+            plotting.plt.savefig(os.path.join(colab_epoch_folder,'%s_sample%d.png' % (args.data_set, epoch)))
             plotting.plt.close('all')
             #np.savez(os.path.join(args.save_dir,'%s_sample%d.npz' % (args.data_set, epoch)), sample_x)
 
             # save params
-            saver.save(sess, args.save_dir+"/"+epoch_folder_name+'/params_' + args.data_set + '.ckpt')
+            saver.save(sess, colab_epoch_folder + '/params_' + args.data_set + '.ckpt')
             import drive_loader.py
             drive = drive_auth()
             ckpt_folder_id = create_folder(drive, epoch_folder_name, pixel_cnn_folder_drive_id)
-            for f in os.listdir(args.save_dir+"/"+epoch_folder_name):
-                save_to_drive(drive, ckpt_folder_id, args.save_dir+"/"+epoch_folder_name)
+            for f in os.listdir(colab_epoch_folder):
+                save_to_drive(drive, ckpt_folder_id, colab_epoch_folder)
             #np.savez(args.save_dir + '/test_bpd_' + args.data_set + '.npz', test_bpd=np.array(test_bpd))
