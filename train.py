@@ -19,7 +19,6 @@ import tensorflow as tf
 from pixel_cnn_pp import nn
 from pixel_cnn_pp.model import model_spec
 from utils import plotting
-import drive_loader
 # -----------------------------------------------------------------------------
 parser = argparse.ArgumentParser()
 # data I/O
@@ -28,6 +27,7 @@ parser.add_argument('-o', '--save_dir', type=str, default='/local_home/tim/pxpp/
 parser.add_argument('-d', '--data_set', type=str, default='cifar', help='Can be either cifar|imagenet')
 parser.add_argument('-t', '--save_interval', type=int, default=20, help='Every how many epochs to write checkpoint/samples?')
 parser.add_argument('-r', '--load_params', type=str, help='Restore training from previous model checkpoint?')#, dest='load_params', action='store_true'
+parser.add_argument('--drive_dir', type=str, default="/content/drive/My Drive/pixel-cnn", help='Folder in Google Drive with ckpt folders (for Colab)')
 # model
 parser.add_argument('-q', '--nr_resnet', type=int, default=5, help='Number of residual blocks per stage of the model')
 parser.add_argument('-n', '--nr_filters', type=int, default=160, help='Number of filters to use across the model. Higher = larger model.')
@@ -205,8 +205,10 @@ with tf.compat.v1.Session() as sess:
         if epoch == 0:
             train_data.reset()  # rewind the iterator back to 0 to do one full epoch
             if args.load_params:
-                drive = drive_loader.drive_auth()
-                drive_loader.load_from_drive(drive, pixel_cnn_folder_colab, int(args.load_params), pixel_cnn_folder_drive_id)
+                if args.drive_dir:
+                    ckpt_path = args.drive_dir + '/ckpt' + args.load_params
+                    for f in os.listdir(ckpt_path):
+                        shutil.copy(ckpt_path+'/'+str(f), args.save_dir)
                 ckpt_file = args.save_dir + '/params_' + args.data_set + '.ckpt'
                 sess = tf.Session()
                 saver = tf.train.import_meta_graph(ckpt_file + '.meta')
@@ -276,3 +278,4 @@ with tf.compat.v1.Session() as sess:
                 #drive_loader.save_to_drive(drive, ckpt_folder_id, colab_epoch_folder+"/"+str(f))
                 shutil.copy(colab_epoch_folder+"/"+str(f), "/content/drive/My Drive/pixel-cnn/"+colab_epoch_folder)
             #np.savez(args.save_dir + '/test_bpd_' + args.data_set + '.npz', test_bpd=np.array(test_bpd))
+        epoch += 1
