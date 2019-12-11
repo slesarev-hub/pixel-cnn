@@ -36,7 +36,6 @@ def load_from_drive(drive, colab_download_path, ckpt_number, general_ckpt_folder
     for folder in folders_list:
         if folder['title'] == folder_name:
             folder_id = folder['id']
-    #local_download_path = "/content/pixel_cnn"
     file_list = drive.ListFile({'q': "\'"+folder_id+"\' in parents"}).GetList()
     for f in file_list:
         print('title: %s, id: %s' % (f['title'], f['id']))

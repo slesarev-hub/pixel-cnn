@@ -203,9 +203,8 @@ with tf.compat.v1.Session() as sess:
         if epoch == 0:
             train_data.reset()  # rewind the iterator back to 0 to do one full epoch
             if args.load_params:
-                import drive_loader.py
-                drive = drive_auth()
-                load_from_drive(drive, pixel_cnn_folder_colab, int(args.load_params), pixel_cnn_folder_drive_id)
+                drive = drive_loader.drive_auth()
+                drive_loader.load_from_drive(drive, pixel_cnn_folder_colab, int(args.load_params), pixel_cnn_folder_drive_id)
                 ckpt_file = args.save_dir + '/params_' + args.data_set + '.ckpt'
                 sess = tf.Session()
                 saver = tf.train.import_meta_graph(ckpt_file + '.meta')
@@ -268,9 +267,8 @@ with tf.compat.v1.Session() as sess:
 
             # save params
             saver.save(sess, colab_epoch_folder + '/params_' + args.data_set + '.ckpt')
-            import drive_loader.py
-            drive = drive_auth()
-            ckpt_folder_id = create_folder(drive, epoch_folder_name, pixel_cnn_folder_drive_id)
+            drive = drive_loader.drive_auth()
+            ckpt_folder_id = drive_loader.create_folder(drive, epoch_folder_name, pixel_cnn_folder_drive_id)
             for f in os.listdir(colab_epoch_folder):
-                save_to_drive(drive, ckpt_folder_id, colab_epoch_folder)
+                drive_loader.save_to_drive(drive, ckpt_folder_id, colab_epoch_folder)
             #np.savez(args.save_dir + '/test_bpd_' + args.data_set + '.npz', test_bpd=np.array(test_bpd))
