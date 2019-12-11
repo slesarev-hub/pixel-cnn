@@ -25,7 +25,7 @@ parser.add_argument('-i', '--data_dir', type=str, default='/local_home/tim/pxpp/
 parser.add_argument('-o', '--save_dir', type=str, default='/local_home/tim/pxpp/save', help='Location for parameter checkpoints and samples')
 parser.add_argument('-d', '--data_set', type=str, default='cifar', help='Can be either cifar|imagenet')
 parser.add_argument('-t', '--save_interval', type=int, default=20, help='Every how many epochs to write checkpoint/samples?')
-parser.add_argument('-r', '--load_params', dest='load_params', action='store_true', help='Restore training from previous model checkpoint?')
+parser.add_argument('-r', '--load_params', type=str, help='Restore training from previous model checkpoint?')#, dest='load_params', action='store_true'
 # model
 parser.add_argument('-q', '--nr_resnet', type=int, default=5, help='Number of residual blocks per stage of the model')
 parser.add_argument('-n', '--nr_filters', type=int, default=160, help='Number of filters to use across the model. Higher = larger model.')
@@ -185,30 +185,38 @@ def make_feed_dict(data, init=False):
     return feed_dict
 
 # //////////// perform training //////////////
+
+pixel_cnn_folder_drive_id = '1B9YuUXWXvLgibfHPBGDeRDIROq0hsWDZ'
+pixel_cnn_folder_colab = "/content/pixel_cnn"
+
+
 if not os.path.exists(args.save_dir):
     os.makedirs(args.save_dir)
 test_bpd = []
 lr = args.learning_rate
 with tf.compat.v1.Session() as sess:
-    for epoch in range(args.max_epochs):
+    epoch = 0
+    while epoch < args.max_epochs:
         begin = time.time()
 
         # init
         if epoch == 0:
             train_data.reset()  # rewind the iterator back to 0 to do one full epoch
             if args.load_params:
+                import drive_loader.py
+                load_from_drive(pixel_cnn_folder_colab, int(args.load_params), pixel_cnn_folder_drive_id)
                 ckpt_file = args.save_dir + '/params_' + args.data_set + '.ckpt'
-                print('restoring parameters from', ckpt_file)
+                sess = tf.Session()
+                saver = tf.train.import_meta_graph(ckpt_file + '.meta')
                 saver.restore(sess, ckpt_file)
+                epoch = int(args.load_params+1)
                 # generate sample
-                #for i in range(10):
                 sample = sample_from_model(sess)
                 img_tile = plotting.img_tile(sample, aspect_ratio=1.0, border_color=1.0, stretch=True)
                 img = plotting.plot_img(img_tile, title=args.data_set + ' samples')
                 plotting.plt.savefig(os.path.join(args.save_dir,'%s_sample%d_%d.png' % (args.data_set, epoch,i)))
                 plotting.plt.close('all')
-                np.savez(os.path.join(args.save_dir,'%s_sample%d.npz' % (args.data_set, epoch)), sample)
-                #sys.exit() 
+                #np.savez(os.path.join(args.save_dir,'%s_sample%d.npz' % (args.data_set, epoch)), sample)
             else:
                 print('initializing the model...')
                 sess.run(initializer)
@@ -249,10 +257,16 @@ with tf.compat.v1.Session() as sess:
             sample_x = np.concatenate(sample_x,axis=0)
             img_tile = plotting.img_tile(sample_x[:100], aspect_ratio=1.0, border_color=1.0, stretch=True)
             img = plotting.plot_img(img_tile, title=args.data_set + ' samples')
-            plotting.plt.savefig(os.path.join(args.save_dir,'%s_sample%d.png' % (args.data_set, epoch)))
+            epoch_folder_name = "ckpt"+str(epoch)
+            plotting.plt.savefig(os.path.join(args.save_dir+"/"+epoch_folder_name,'%s_sample%d.png' % (args.data_set, epoch)))
             plotting.plt.close('all')
-            np.savez(os.path.join(args.save_dir,'%s_sample%d.npz' % (args.data_set, epoch)), sample_x)
+            #np.savez(os.path.join(args.save_dir,'%s_sample%d.npz' % (args.data_set, epoch)), sample_x)
 
             # save params
-            saver.save(sess, args.save_dir + '/params_' + args.data_set + '.ckpt')
-            np.savez(args.save_dir + '/test_bpd_' + args.data_set + '.npz', test_bpd=np.array(test_bpd))
+            saver.save(sess, args.save_dir+"/"+epoch_folder_name+'/params_' + args.data_set + '.ckpt')
+            import drive_loader.py
+            drive = drive_auth()
+            ckpt_folder_id = create_folder(drive, epoch_folder_name, pixel_cnn_folder_drive_id)
+            for f in os.listdir(args.save_dir+"/"+epoch_folder_name):
+                save_to_drive(drive, ckpt_folder_id, args.save_dir+"/"+epoch_folder_name)
+            #np.savez(args.save_dir + '/test_bpd_' + args.data_set + '.npz', test_bpd=np.array(test_bpd))
