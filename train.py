@@ -10,7 +10,8 @@ import os
 import sys
 import json
 import argparse
-import time
+import time 
+import shutil
 
 import numpy as np
 import tensorflow as tf
@@ -270,6 +271,8 @@ with tf.compat.v1.Session() as sess:
             saver.save(sess, colab_epoch_folder + '/params_' + args.data_set + '.ckpt')
             drive = drive_loader.drive_auth()
             ckpt_folder_id = drive_loader.create_folder(drive, epoch_folder_name, pixel_cnn_folder_drive_id)
+            #os.mkdir("/content/drive/My Drive/pixel-cnn/"+colab_epoch_folder)
             for f in os.listdir(colab_epoch_folder):
-                drive_loader.save_to_drive(drive, ckpt_folder_id, colab_epoch_folder)
+                drive_loader.save_to_drive(drive, ckpt_folder_id, colab_epoch_folder+"/"+str(f))
+                #shutil.copy()
             #np.savez(args.save_dir + '/test_bpd_' + args.data_set + '.npz', test_bpd=np.array(test_bpd))
