@@ -18,6 +18,7 @@ import tensorflow as tf
 from pixel_cnn_pp import nn
 from pixel_cnn_pp.model import model_spec
 from utils import plotting
+import drive_loader
 # -----------------------------------------------------------------------------
 parser = argparse.ArgumentParser()
 # data I/O
