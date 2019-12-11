@@ -213,7 +213,7 @@ with tf.compat.v1.Session() as sess:
                 sess = tf.Session()
                 saver = tf.train.import_meta_graph(ckpt_file + '.meta')
                 saver.restore(sess, ckpt_file)
-                epoch = int(args.load_params+1)
+                epoch = int(args.load_params)+1
                 # generate sample
                 sample = sample_from_model(sess)
                 img_tile = plotting.img_tile(sample, aspect_ratio=1.0, border_color=1.0, stretch=True)
