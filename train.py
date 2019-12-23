@@ -25,7 +25,7 @@ parser = argparse.ArgumentParser()
 parser.add_argument('-i', '--data_dir', type=str, default='/local_home/tim/pxpp/data', help='Location for the dataset')
 parser.add_argument('-o', '--save_dir', type=str, default='/local_home/tim/pxpp/save', help='Location for parameter checkpoints and samples')
 parser.add_argument('-d', '--data_set', type=str, default='cifar', help='Can be either cifar|imagenet')
-parser.add_argument('-t', '--save_interval', type=int, default=20, help='Every how many epochs to write checkpoint/samples?')
+parser.add_argument('-t', '--   al', type=int, default=20, help='Every how many epochs to write checkpoint/samples?')
 parser.add_argument('-r', '--load_params', type=str, help='Restore training from previous model checkpoint?')#, dest='load_params', action='store_true'
 parser.add_argument('--drive_dir', type=str, default="/content/drive/My Drive/pixel-cnn", help='Folder in Google Drive with ckpt folders (for Colab)')
 # model
@@ -102,7 +102,6 @@ else:
 # create the model
 model_opt = { 'nr_resnet': args.nr_resnet, 'nr_filters': args.nr_filters, 'nr_logistic_mix': args.nr_logistic_mix, 'resnet_nonlinearity': args.resnet_nonlinearity, 'energy_distance': args.energy_distance }
 model = tf.compat.v1.make_template('model', model_spec)
-
 # run once for data dependent initialization of parameters
 init_pass = model(x_init, h_init, init=True, dropout_p=args.dropout_p, **model_opt)
 
@@ -270,6 +269,7 @@ with tf.compat.v1.Session() as sess:
             #np.savez(os.path.join(args.save_dir,'%s_sample%d.npz' % (args.data_set, epoch)), sample_x)
 
             # save params
+            print('EPOCH : ', epoch)
             saver.save(sess, colab_epoch_folder + '/params_' + args.data_set + '.ckpt')
             #drive = drive_loader.drive_auth()
             #ckpt_folder_id = drive_loader.create_folder(drive, epoch_folder_name, pixel_cnn_folder_drive_id)
