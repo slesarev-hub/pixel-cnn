@@ -25,7 +25,7 @@ parser = argparse.ArgumentParser()
 parser.add_argument('-i', '--data_dir', type=str, default='/local_home/tim/pxpp/data', help='Location for the dataset')
 parser.add_argument('-o', '--save_dir', type=str, default='/local_home/tim/pxpp/save', help='Location for parameter checkpoints and samples')
 parser.add_argument('-d', '--data_set', type=str, default='cifar', help='Can be either cifar|imagenet')
-parser.add_argument('-t', '--   al', type=int, default=20, help='Every how many epochs to write checkpoint/samples?')
+parser.add_argument('-t', '--save_interval', type=int, default=20, help='Every how many epochs to write checkpoint/samples?')
 parser.add_argument('-r', '--load_params', type=str, help='Restore training from previous model checkpoint?')#, dest='load_params', action='store_true'
 parser.add_argument('--drive_dir', type=str, default="/content/drive/My Drive/pixel-cnn", help='Folder in Google Drive with ckpt folders (for Colab)')
 # model
