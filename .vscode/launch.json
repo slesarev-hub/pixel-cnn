@@ -14,7 +14,7 @@
                      "--save_dir", "/home/alexander/Projects/pixel-cnn",// "--l$
                      "-d", "ahe",
                      "-b", "1",
-                     "-u", "1"]
+                     "-u", "1", "-t", "1", "--load_params", "5", "--drive_dir", "."]
         }
     ]
 }

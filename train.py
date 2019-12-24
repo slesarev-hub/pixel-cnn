@@ -46,6 +46,8 @@ parser.add_argument('-g', '--nr_gpu', type=int, default=1, help='How many GPUs t
 # evaluation
 parser.add_argument('--polyak_decay', type=float, default=0.9995, help='Exponential decay rate of the sum of previous model iterates during Polyak averaging')
 parser.add_argument('-ns', '--num_samples', type=int, default=1, help='How many batches of samples to output.')
+# gdrive 
+parser.add_argument('--ckpt_folder_drive_dir', type=str, default='/content/drive/My Drive/pixel-cnn')
 # reproducibility
 parser.add_argument('-s', '--seed', type=int, default=1, help='Random seed to use')
 args = parser.parse_args()
@@ -260,15 +262,24 @@ with tf.compat.v1.Session() as sess:
             sample_x = np.concatenate(sample_x,axis=0)
             img_tile = plotting.img_tile(sample_x[:100], aspect_ratio=1.0, border_color=1.0, stretch=True)
             img = plotting.plot_img(img_tile, title=args.data_set + ' samples')
+<<<<<<< HEAD
             epoch_folder_name = "ckpt"+str(epoch)
             colab_epoch_folder = args.save_dir+"/"+epoch_folder_name
             if not os.path.exists(colab_epoch_folder):
                 os.mkdir(colab_epoch_folder)
             plotting.plt.savefig(os.path.join(colab_epoch_folder,'%s_sample%d.png' % (args.data_set, epoch)))
+=======
+            if args.ckpt_folder_drive_dir:
+                save_path = args.ckpt_folder_drive_dir
+            elif args.save_dir:
+                save_path = args.save_dir
+            plotting.plt.savefig(os.path.join(save_path,'%s_sample%d.png' % (args.data_set, epoch)))
+>>>>>>> tmp-branch
             plotting.plt.close('all')
             #np.savez(os.path.join(args.save_dir,'%s_sample%d.npz' % (args.data_set, epoch)), sample_x)
 
             # save params
+<<<<<<< HEAD
             print('EPOCH : ', epoch)
             saver.save(sess, colab_epoch_folder + '/params_' + args.data_set + '.ckpt',global_step=epoch)
             #drive = drive_loader.drive_auth()
@@ -279,3 +290,13 @@ with tf.compat.v1.Session() as sess:
                 shutil.copy(colab_epoch_folder+"/"+str(f), "/content/drive/My Drive/pixel-cnn/"+colab_epoch_folder)
             #np.savez(args.save_dir + '/test_bpd_' + args.data_set + '.npz', test_bpd=np.array(test_bpd))
         epoch += 1
+=======
+            print('SAVE EPOCH : ', epoch)
+            if args.ckpt_folder_drive_dir:
+                # delete prev ckpt 
+                filelist = [f for f in os.listdir(save_path) if not f.endswith('.png')]
+                for f in filelist:
+                    os.remove(os.path.join(save_path, f))
+            saver.save(sess, save_path + '/params_' + args.data_set + '.ckpt',global_step=epoch)
+            np.savez(save_path + '/test_bpd_' + args.data_set + '.npz', test_bpd=np.array(test_bpd))
+>>>>>>> tmp-branch
