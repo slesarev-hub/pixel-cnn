@@ -165,7 +165,7 @@ def sample_from_model(sess):
 
 # init & save
 initializer = tf.global_variables_initializer()
-saver = tf.train.Saver(max_to_keep=1)
+saver = tf.train.Saver()
 
 # turn numpy inputs into feed_dict for use with tensorflow
 def make_feed_dict(data, init=False):
@@ -189,39 +189,21 @@ def make_feed_dict(data, init=False):
 
 # //////////// perform training //////////////
 
-pixel_cnn_folder_drive_id = '1B9YuUXWXvLgibfHPBGDeRDIROq0hsWDZ'
-pixel_cnn_folder_colab = "/content/pixel_cnn"
-
-
 if not os.path.exists(args.save_dir):
     os.makedirs(args.save_dir)
 test_bpd = []
 lr = args.learning_rate
 with tf.compat.v1.Session() as sess:
-    epoch = 0
-    while epoch < args.max_epochs:
+    for epoch in range(args.max_epochs):
         begin = time.time()
 
         # init
         if epoch == 0:
             train_data.reset()  # rewind the iterator back to 0 to do one full epoch
             if args.load_params:
-                if args.drive_dir:
-                    ckpt_path = args.drive_dir + '/ckpt' + args.load_params
-                    for f in os.listdir(ckpt_path):
-                        shutil.copy(ckpt_path+'/'+str(f), args.save_dir)
                 ckpt_file = args.save_dir + '/params_' + args.data_set + '.ckpt'
-                sess = tf.Session()
-                saver = tf.train.import_meta_graph(ckpt_file + '.meta')
+                print('restoring parameters from', ckpt_file)
                 saver.restore(sess, ckpt_file)
-                epoch = int(args.load_params)+1
-                # generate sample
-                sample = sample_from_model(sess)
-                img_tile = plotting.img_tile(sample, aspect_ratio=1.0, border_color=1.0, stretch=True)
-                img = plotting.plot_img(img_tile, title=args.data_set + ' samples')
-                plotting.plt.savefig(os.path.join(args.save_dir,'%s_sample%d_%d.png' % (args.data_set, epoch,i)))
-                plotting.plt.close('all')
-                #np.savez(os.path.join(args.save_dir,'%s_sample%d.npz' % (args.data_set, epoch)), sample)
             else:
                 print('initializing the model...')
                 sess.run(initializer)
@@ -262,35 +244,15 @@ with tf.compat.v1.Session() as sess:
             sample_x = np.concatenate(sample_x,axis=0)
             img_tile = plotting.img_tile(sample_x[:100], aspect_ratio=1.0, border_color=1.0, stretch=True)
             img = plotting.plot_img(img_tile, title=args.data_set + ' samples')
-<<<<<<< HEAD
-            epoch_folder_name = "ckpt"+str(epoch)
-            colab_epoch_folder = args.save_dir+"/"+epoch_folder_name
-            if not os.path.exists(colab_epoch_folder):
-                os.mkdir(colab_epoch_folder)
-            plotting.plt.savefig(os.path.join(colab_epoch_folder,'%s_sample%d.png' % (args.data_set, epoch)))
-=======
             if args.ckpt_folder_drive_dir:
                 save_path = args.ckpt_folder_drive_dir
             elif args.save_dir:
                 save_path = args.save_dir
             plotting.plt.savefig(os.path.join(save_path,'%s_sample%d.png' % (args.data_set, epoch)))
->>>>>>> tmp-branch
             plotting.plt.close('all')
             #np.savez(os.path.join(args.save_dir,'%s_sample%d.npz' % (args.data_set, epoch)), sample_x)
 
             # save params
-<<<<<<< HEAD
-            print('EPOCH : ', epoch)
-            saver.save(sess, colab_epoch_folder + '/params_' + args.data_set + '.ckpt',global_step=epoch)
-            #drive = drive_loader.drive_auth()
-            #ckpt_folder_id = drive_loader.create_folder(drive, epoch_folder_name, pixel_cnn_folder_drive_id)
-            os.mkdir("/content/drive/My Drive/pixel-cnn/"+colab_epoch_folder)
-            for f in os.listdir(colab_epoch_folder):
-                #drive_loader.save_to_drive(drive, ckpt_folder_id, colab_epoch_folder+"/"+str(f))
-                shutil.copy(colab_epoch_folder+"/"+str(f), "/content/drive/My Drive/pixel-cnn/"+colab_epoch_folder)
-            #np.savez(args.save_dir + '/test_bpd_' + args.data_set + '.npz', test_bpd=np.array(test_bpd))
-        epoch += 1
-=======
             print('SAVE EPOCH : ', epoch)
             if args.ckpt_folder_drive_dir:
                 # delete prev ckpt 
@@ -299,4 +261,3 @@ with tf.compat.v1.Session() as sess:
                     os.remove(os.path.join(save_path, f))
             saver.save(sess, save_path + '/params_' + args.data_set + '.ckpt',global_step=epoch)
             np.savez(save_path + '/test_bpd_' + args.data_set + '.npz', test_bpd=np.array(test_bpd))
->>>>>>> tmp-branch
