@@ -44,12 +44,12 @@ parser.add_argument('-g', '--nr_gpu', type=int, default=1, help='How many GPUs t
 # evaluation
 parser.add_argument('--polyak_decay', type=float, default=0.9995, help='Exponential decay rate of the sum of previous model iterates during Polyak averaging')
 parser.add_argument('-ns', '--num_samples', type=int, default=1, help='How many batches of samples to output.')
+# gdrive 
+parser.add_argument('--ckpt_folder_drive_dir', type=str, default='/content/drive/My Drive/pixel-cnn')
 # reproducibility
 parser.add_argument('-s', '--seed', type=int, default=1, help='Random seed to use')
 args = parser.parse_args()
 print('input args:\n', json.dumps(vars(args), indent=4, separators=(',',':'))) # pretty print args
-# gdrive 
-parser.add_argument('--ckpt_folder_drive_dir', type=str, default='/content/drive/My Drive/pixel-cnn')
 
 # -----------------------------------------------------------------------------
 # fix random seed for reproducibility
