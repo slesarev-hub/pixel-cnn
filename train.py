@@ -162,8 +162,8 @@ def sample_from_model(sess):
     return np.concatenate(x_gen, axis=0)
 
 # init & save
-initializer = tf.compat.v1.global_variables_initializer()
-saver = tf.compat.v1.train.Saver()
+initializer = tf.global_variables_initializer()
+saver = tf.train.Saver(max_to_keep=1)
 
 # turn numpy inputs into feed_dict for use with tensorflow
 def make_feed_dict(data, init=False):
@@ -270,7 +270,7 @@ with tf.compat.v1.Session() as sess:
 
             # save params
             print('EPOCH : ', epoch)
-            saver.save(sess, colab_epoch_folder + '/params_' + args.data_set + '.ckpt')
+            saver.save(sess, colab_epoch_folder + '/params_' + args.data_set + '.ckpt',global_step=epoch)
             #drive = drive_loader.drive_auth()
             #ckpt_folder_id = drive_loader.create_folder(drive, epoch_folder_name, pixel_cnn_folder_drive_id)
             os.mkdir("/content/drive/My Drive/pixel-cnn/"+colab_epoch_folder)
