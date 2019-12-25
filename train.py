@@ -206,7 +206,7 @@ with tf.compat.v1.Session() as sess:
                 data_file = args.ckpt_folder_drive_dir+'/'+[f for f in filelist if '.data' in f][0]
                 meta_file = args.ckpt_folder_drive_dir+'/'+[f for f in filelist if '.meta' in f][0]
                 print('!!!',meta_file)
-                sess = tf.Session()
+                #sess = tf.Session()
                 saver = tf.train.import_meta_graph(meta_file)
                 saver.restore(sess, data_file)
                 print('LOAD EPOCH : ', args.load_params)
