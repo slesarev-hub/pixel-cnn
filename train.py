@@ -205,6 +205,7 @@ with tf.compat.v1.Session() as sess:
                 filelist = [f for f in os.listdir(args.ckpt_folder_drive_dir) if not f.endswith('.png')]
                 data_file = [f for f in filelist if '.data' in f][0]
                 meta_file = [f for f in filelist if '.meta' in f][0]
+                print('!!!',meta_file)
                 sess = tf.Session()
                 saver = tf.train.import_meta_graph(meta_file)
                 saver.restore(sess, data_file)
