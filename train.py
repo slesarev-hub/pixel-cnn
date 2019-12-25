@@ -26,8 +26,7 @@ parser.add_argument('-i', '--data_dir', type=str, default='/local_home/tim/pxpp/
 parser.add_argument('-o', '--save_dir', type=str, default='/local_home/tim/pxpp/save', help='Location for parameter checkpoints and samples')
 parser.add_argument('-d', '--data_set', type=str, default='cifar', help='Can be either cifar|imagenet')
 parser.add_argument('-t', '--save_interval', type=int, default=20, help='Every how many epochs to write checkpoint/samples?')
-parser.add_argument('-r', '--load_params', help='Restore training from previous model checkpoint?')#, dest='load_params', action='store_true'
-parser.add_argument('--load_epoch', type=int)
+parser.add_argument('-r', '--load_params', type = int, help='Restore training from previous model checkpoint?')#, dest='load_params', action='store_true'
 parser.add_argument('--drive_dir', type=str, default="/content/drive/My Drive/pixel-cnn", help='Folder in Google Drive with ckpt folders (for Colab)')
 # model
 parser.add_argument('-q', '--nr_resnet', type=int, default=5, help='Number of residual blocks per stage of the model')
@@ -202,15 +201,15 @@ with tf.compat.v1.Session() as sess:
         # init
         if epoch == 0:
             train_data.reset()  # rewind the iterator back to 0 to do one full epoch
-            if args.load_params and args.ckpt_folder_drive_dir and args.load_epoch:
+            if args.load_params and args.ckpt_folder_drive_dir:
                 filelist = [f for f in os.listdir(args.ckpt_folder_drive_dir) if not f.endswith('.png')]
                 data_file = [f for f in filelist if '.data' in f][0]
                 meta_file = [f for f in filelist if '.meta' in f][0]
                 sess = tf.Session()
                 saver = tf.train.import_meta_graph(meta_file)
                 saver.restore(sess, data_file)
-                print('LOAD EPOCH : ', args.load_epoch)
-                epoch = int(args.load_epoch)+1
+                print('LOAD EPOCH : ', args.load_params)
+                epoch = int(args.load_params)+1
             elif args.load_params:
                 ckpt_file = args.save_dir + '/params_' + args.data_set + '.ckpt'
                 print('restoring parameters from', ckpt_file)
