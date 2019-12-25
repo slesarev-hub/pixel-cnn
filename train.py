@@ -203,8 +203,8 @@ with tf.compat.v1.Session() as sess:
             train_data.reset()  # rewind the iterator back to 0 to do one full epoch
             if args.load_params and args.ckpt_folder_drive_dir:
                 filelist = [f for f in os.listdir(args.ckpt_folder_drive_dir) if not f.endswith('.png')]
-                data_file = [f for f in filelist if '.data' in f][0]
-                meta_file = [f for f in filelist if '.meta' in f][0]
+                data_file = args.ckpt_folder_drive_dir+'/'+[f for f in filelist if '.data' in f][0]
+                meta_file = args.ckpt_folder_drive_dir+'/'+[f for f in filelist if '.meta' in f][0]
                 print('!!!',meta_file)
                 sess = tf.Session()
                 saver = tf.train.import_meta_graph(meta_file)
