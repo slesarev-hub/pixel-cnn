@@ -209,7 +209,8 @@ with tf.compat.v1.Session() as sess:
                 sess = tf.Session()
                 saver = tf.train.import_meta_graph(meta_file)
                 saver.restore(sess, data_file)
-                epoch = int(args.load_params)+1
+                print('LOAD EPOCH : ', args.load_epoch)
+                epoch = int(args.load_epoch)+1
             elif args.load_params:
                 ckpt_file = args.save_dir + '/params_' + args.data_set + '.ckpt'
                 print('restoring parameters from', ckpt_file)
