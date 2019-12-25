@@ -194,6 +194,7 @@ if not os.path.exists(args.save_dir):
 test_bpd = []
 lr = args.learning_rate
 with tf.compat.v1.Session() as sess:
+    sess.run(initializer)
     epoch = 0
     while epoch < args.max_epochs:
         begin = time.time()
